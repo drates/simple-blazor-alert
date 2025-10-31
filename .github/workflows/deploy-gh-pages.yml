@@ -1,0 +1,45 @@
+name: Deploy Blazor WASM to GitHub Pages
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch: {}
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Publish
+        run: dotnet publish -c Release -o publish
+
+      - name: Adjust base href for GitHub Pages and add SPA fallback
+        run: |
+          if [ -f publish/wwwroot/index.html ]; then
+            # Use a relative base href so the app works under repo pages (e.g. /user/repo/)
+            sed -i 's|<base href="/"|<base href="./"|g' publish/wwwroot/index.html || true
+            # Copy index.html to 404.html to enable client-side routing on GitHub Pages
+            cp publish/wwwroot/index.html publish/wwwroot/404.html
+          else
+            echo "publish/wwwroot/index.html not found"
+            exit 1
+          fi
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./publish/wwwroot
+          publish_branch: gh-pages
+          user_name: 'github-actions[bot]'
+          user_email: 'github-actions[bot]@users.noreply.github.com'

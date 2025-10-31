@@ -1,0 +1,1 @@
+C:\Users\Pelantaro\Desktop\SimpleBlazorAlert\publish\web.config

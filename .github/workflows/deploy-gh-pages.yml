@@ -5,12 +5,21 @@ on:
     branches: [ main ]
   workflow_dispatch: {}
 
+# Ensure the GITHUB_TOKEN has permission to push files
+permissions:
+  contents: write
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          # fetch full history so deployments and tags work correctly
+          fetch-depth: 0
+          # allow subsequent steps to use the token credentials
+          persist-credentials: true
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
